@@ -168,8 +168,6 @@ int	de2enfile(char	*fname,char	*delim,char	*key,char	*sfile,char	*encryfile)
 	 **/
 
 	//strcpy(szInputKey,"88888888");
-	memcpy(szInputKey,key,8);
-	leoDES2_InitializeKey(szInputKey);
 
 	sfilefp = fopen(sfile,"r");
 	if(sfilefp ==NULL)
@@ -228,9 +226,16 @@ int	de2enfile(char	*fname,char	*delim,char	*key,char	*sfile,char	*encryfile)
 			fclose(encryfp);
 			return -1;
 		}
-
+		/** 初始化所有数据 **/
+		memset(szInputKey,0x00,sizeof(szInputKey));
+		memset(szInputPlaintext,0x00,sizeof(szInputPlaintext));
+		memset(szInputCiphertext,0x00,sizeof(szInputCiphertext));
+		memset(szInputCiphertextInHex,0x00,sizeof(szInputCiphertextInHex));
+		memset(szCiphertextInBit,0x00,sizeof(szCiphertextInBit));
 		//printf("cardno is [%s]passwd is [%s] [%s] [%s] [%s]\n",cardno,passwd,enddate,seqno,crname);
 		/** 第一次DES **/
+		memcpy(szInputKey,key,8);
+		leoDES2_InitializeKey(szInputKey);
 		memset(encrystr,0x00,sizeof(encrystr));
 		strcpy(szInputPlaintext,passwd);	
 		temp = strlen(szInputPlaintext);
@@ -324,8 +329,6 @@ int	en2defile(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
 	 **/
 
 	// strcpy(szInputKey,"88888888");
-	memcpy(szInputKey,key+16,8);
-	leoDES2_InitializeKey(szInputKey);
 
 
 	sfilefp = fopen(sfile,"w");
@@ -388,9 +391,16 @@ int	en2defile(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
 
 		//printf("cardno is [%s]passwd is [%s] [%s] [%s] [%s]\n",cardno,passwd,enddate,seqno,crname);
 		/** 第一次解密 **/
+		memset(szInputKey,0x00,sizeof(szInputKey));
+		memset(szInputPlaintext,0x00,sizeof(szInputPlaintext));
+		memset(szInputCiphertext,0x00,sizeof(szInputCiphertext));
+		memset(szInputCiphertextInHex,0x00,sizeof(szInputCiphertextInHex));
+		memset(szCiphertextInBit,0x00,sizeof(szCiphertextInBit));
 		memset(encrystr,0x00,sizeof(encrystr));
 		memset(szInputCiphertextInHex,0,2048);
 		memset(szCiphertextInBit,0,8196);
+		memcpy(szInputKey,key+16,8);
+		leoDES2_InitializeKey(szInputKey);
 		strcpy(szInputCiphertextInHex,passwd);
 		temp = strlen(szInputCiphertextInHex);
 
