@@ -47,7 +47,7 @@ int SysLog(char	*type,char *format,...)
 	}
 	if(get_cfg(logpath,keyword,&keylen,NULL)!=0)
 	{
-		SysLog("S","FILE [%s] LINE[%d] 打开配置文件[%s]失败,ERROR[%s]\n",__FILE__,__LINE__,"des.cfg",strerror(errno));	
+		printf("FILE [%s] LINE[%d] 打开配置文件[%s]失败,ERROR[%s]\n",__FILE__,__LINE__,"des.cfg",strerror(errno));	
 		return -1;
 	}
 	//printf("!!!![%s] [%s] [%d]\n",logpath,keyword,keylen);
@@ -83,7 +83,7 @@ int get_cfg(char	*logpath,char	*keyword,	int	*keylen,char	*fname)
 	fp = fopen("des.cfg","r");
 	if(fp == NULL)
 	{
-		SysLog("S","FILE [%s] LINE[%d] 打开配置文件[%s]失败,ERROR[%s]\n",__FILE__,__LINE__,"des.cfg",strerror(errno));	
+		printf("FILE [%s] LINE[%d] 打开配置文件[%s]失败,ERROR[%s]\n",__FILE__,__LINE__,"des.cfg",strerror(errno));	
 		return -1;
 	}
 	while(fgets(tmpstr,sizeof(tmpstr),fp)!=NULL)
@@ -98,6 +98,9 @@ int get_cfg(char	*logpath,char	*keyword,	int	*keylen,char	*fname)
 			if(logpath!=NULL)
 			{
 				strcpy(logpath,strstr(tmpstr,":")+1);
+			}else
+			{
+				return -1;
 			}
 		}
 		if(!strncmp(tmpstr,"KEYVALUE",8))
@@ -244,9 +247,8 @@ int	de2enfile(char	*fname,char	*delim,char	*key,char	*sfile,char	*encryfile)
 		leoDES2_Bits2Hex(szInputCiphertextInHex,szCiphertextInBit,temp << 3);
 		//szInputCiphertextInHex[temp % 8 == 0 ? temp << 1 : ((temp >> 3) + 1) << 4] = '\0';
 		szInputCiphertextInHex[temp << 1] = 0;
-		printf("After encrypt:\n%s\n\n\n",szInputCiphertextInHex);
 		strcpy(encrystr,szInputCiphertextInHex);
-		printf("%s %d 第一次加密 [%s]\n",__FILE__,__LINE__,encrystr);
+		//printf("%s %d 第一次加密 [%s]\n",__FILE__,__LINE__,encrystr);
 		/** 第二次des **/
 		memcpy(szInputKey,key+8,8);
 		leoDES2_InitializeKey(szInputKey);
@@ -259,7 +261,7 @@ int	de2enfile(char	*fname,char	*delim,char	*key,char	*sfile,char	*encryfile)
 		leoDES2_Bits2Bytes(szInputCiphertext,szCiphertextInBit,temp << 2);
 		leoDES2_DecryptAnyLength(szInputCiphertext,temp >> 1);
 		strcpy(encrystr,leoDES2_GetPlaintextAnyLength());
-		printf("%s %d 第二次加密 [%s]\n",__FILE__,__LINE__,encrystr);
+		//printf("%s %d 第二次加密 [%s]\n",__FILE__,__LINE__,encrystr);
 		/** 第三次 DES **/
 		memcpy(szInputKey,key+16,8);
 		leoDES2_InitializeKey(szInputKey);
@@ -396,8 +398,8 @@ int	en2defile(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
 		leoDES2_Bits2Bytes(szInputCiphertext,szCiphertextInBit,temp << 2);
 		leoDES2_DecryptAnyLength(szInputCiphertext,temp >> 1);
 		strcpy(encrystr,leoDES2_GetPlaintextAnyLength());
-		printf("After decrypt:\n%s\n\n\n", encrystr);
-		printf("%s %d 第一次解密 [%s]\n",__FILE__,__LINE__,encrystr);
+		//printf("After decrypt:\n%s\n\n\n", encrystr);
+		//printf("%s %d 第一次解密 [%s]\n",__FILE__,__LINE__,encrystr);
 
 		/** 第二次解密 **/
 		memcpy(szInputKey,key+8,8);
@@ -415,7 +417,7 @@ int	en2defile(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
 		//szInputCiphertextInHex[temp % 8 == 0 ? temp << 1 : ((temp >> 3) + 1) << 4] = '\0';
 		szInputCiphertextInHex[temp << 1] = 0;
 		strcpy(encrystr,szInputCiphertextInHex);
-		printf("%s %d 第二次解密 [%s]\n",__FILE__,__LINE__,encrystr);
+		//printf("%s %d 第二次解密 [%s]\n",__FILE__,__LINE__,encrystr);
 
 		/** 第三次解密 **/
 		memcpy(szInputKey,key,8);
