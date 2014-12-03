@@ -384,7 +384,6 @@ void leoDES2_EncryptAnyLength(char* _srcBytes,unsigned int _bytesLength)
 	char szLast8Bits[8] = {0};
 
 	/**lilei **/
-	printf("本次加密[%d]\n",_bytesLength);
 	if(_bytesLength == 8)
 	{
 		leoDES2_EncryptData(_srcBytes);
@@ -397,15 +396,10 @@ void leoDES2_EncryptAnyLength(char* _srcBytes,unsigned int _bytesLength)
 		{
 			_temp8bytes[len]=8;
 		}
-		for(len=0;len<=7;len++)
-		{
-			printf("%x\t\n",_temp8bytes[len]);
-		}
 		leoDES2_EncryptData(_temp8bytes);
 		int iParts = 1;
 			memcpy(szFCiphertextAnyLength +(iParts<<3) ,szCiphertextInBytes,8);
 			szFCiphertextAnyLength[((iParts+1)<<3)] = '\0';
-			printf("1111[%s]\n",szFCiphertextAnyLength);
 		//memcpy(szFCiphertextAnyLength + 8,szCiphertextInBytes,8);
 		//szFCiphertextAnyLength[16] = '\0';
 		 /**lilei **/
@@ -420,10 +414,6 @@ void leoDES2_EncryptAnyLength(char* _srcBytes,unsigned int _bytesLength)
 		for(len=7;len>=_bytesLength;len--)
 		{
 			_temp8bytes[len]=8-_bytesLength;
-		}
-		for(len=0;len<=7;len++)
-		{
-			printf("%x\t",_temp8bytes[len]);
 		}
 		/** lilei **/
 		leoDES2_EncryptData(_temp8bytes);
@@ -465,10 +455,6 @@ void leoDES2_EncryptAnyLength(char* _srcBytes,unsigned int _bytesLength)
 			{
 				//	memset(_temp8bytes,len,8-_bytesLength);
 				szLast8Bits[len]=8-iResidue;
-			}
-			for(len=0;len<=7;len++)
-			{
-				printf("%x\t",szLast8Bits[len]);
 			}
 			/** lilei **/
 			leoDES2_EncryptData(szLast8Bits);
