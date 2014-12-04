@@ -454,3 +454,161 @@ int	en2defile(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
 	fclose(encryfp);
 	return  0;
 }
+int	de2enstr(char	*fname,char	*delim,char	*key,char	*sfile,char	*encryfile)
+{
+	/** 检查key是否为24位 **/
+	if(strlen(key)!=24)
+	{
+		SysLog("E","key 必须位24位 \n");
+		return -1;
+	}
+	char szInputKey[8] = {0};
+	char szInputPlaintext[1024] = {0};
+	char szInputCiphertext[1024] = {0};
+	char szInputCiphertextInHex[2048] = {0};
+	char szCiphertextInBit[8196] = {0};
+	int cmd = -1;
+	int temp = 0;
+
+	int	ret ;
+	/** 根据原明文生成对应的密文 **/
+	char	encrystr[4096];
+	/** 初始化所有数据 **/
+	memset(szInputKey,0x00,sizeof(szInputKey));
+	memset(szInputPlaintext,0x00,sizeof(szInputPlaintext));
+	memset(szInputCiphertext,0x00,sizeof(szInputCiphertext));
+	memset(szInputCiphertextInHex,0x00,sizeof(szInputCiphertextInHex));
+	memset(szCiphertextInBit,0x00,sizeof(szCiphertextInBit));
+	//printf("cardno is [%s]passwd is [%s] [%s] [%s] [%s]\n",cardno,passwd,enddate,seqno,crname);
+	/** 第一次DES **/
+	memcpy(szInputKey,key,8);
+	leoDES2_InitializeKey(szInputKey);
+	memset(encrystr,0x00,sizeof(encrystr));
+	strcpy(szInputPlaintext,sfile);	
+	temp = strlen(szInputPlaintext);
+	leoDES2_EncryptAnyLength(szInputPlaintext,temp);
+	if(temp%8==0)
+	{
+		temp=temp+8;
+	}else
+	{
+		temp = temp % 8 == 0 ? temp : ((temp >> 3 ) + 1)  << 3;
+	}
+	memcpy(szInputCiphertext,leoDES2_GetCiphertextAnyLength(),temp);
+	leoDES2_Bytes2Bits(szInputCiphertext,szCiphertextInBit,temp << 3);
+	leoDES2_Bits2Hex(szInputCiphertextInHex,szCiphertextInBit,temp << 3);
+	//szInputCiphertextInHex[temp % 8 == 0 ? temp << 1 : ((temp >> 3) + 1) << 4] = '\0';
+	szInputCiphertextInHex[temp << 1] = 0;
+	strcpy(encrystr,szInputCiphertextInHex);
+	//printf("%s %d 第一次加密 [%s]\n",__FILE__,__LINE__,encrystr);
+	/** 第二次des **/
+	memcpy(szInputKey,key+8,8);
+	leoDES2_InitializeKey(szInputKey);
+	memset(szInputCiphertextInHex,0,2048);
+	memset(szCiphertextInBit,0,8196);
+	strcpy(szInputCiphertextInHex,encrystr);
+	memset(encrystr,0x00,sizeof(encrystr));
+	temp = strlen(szInputCiphertextInHex);
+	leoDES2_Hex2Bits(szInputCiphertextInHex,szCiphertextInBit,temp << 2);
+	leoDES2_Bits2Bytes(szInputCiphertext,szCiphertextInBit,temp << 2);
+	leoDES2_DecryptAnyLength(szInputCiphertext,temp >> 1);
+	strcpy(encrystr,leoDES2_GetPlaintextAnyLength());
+	//printf("%s %d 第二次加密 [%s]\n",__FILE__,__LINE__,encrystr);
+	/** 第三次 DES **/
+	memcpy(szInputKey,key+16,8);
+	leoDES2_InitializeKey(szInputKey);
+	strcpy(szInputPlaintext,encrystr);	
+	temp = strlen(szInputPlaintext);
+	leoDES2_EncryptAnyLength(szInputPlaintext,temp);
+	temp = temp % 8 == 0 ? temp : ((temp >> 3 ) + 1)  << 3;
+	memcpy(szInputCiphertext,leoDES2_GetCiphertextAnyLength(),temp);
+	leoDES2_Bytes2Bits(szInputCiphertext,szCiphertextInBit,temp << 3);
+	leoDES2_Bits2Hex(szInputCiphertextInHex,szCiphertextInBit,temp << 3);
+	//szInputCiphertextInHex[temp % 8 == 0 ? temp << 1 : ((temp >> 3) + 1) << 4] = '\0';
+	szInputCiphertextInHex[temp << 1] = 0;
+	memset(encrystr,0x00,sizeof(encrystr));
+	strcpy(encrystr,szInputCiphertextInHex);
+	printf("%s %d 第三次加密 [%s]\n",__FILE__,__LINE__,encrystr);
+	strcpy(encryfile,encrystr);
+	return  0;
+}
+int	en2destr(char	*fname,char	*delim,char	*key,char	*encryfile,char	*sfile)
+{
+	/** 检查key是否为24位 **/
+	if(strlen(key)!=24)
+	{
+		SysLog("D","key 必须位24位 \n");
+		return -1;
+	}
+	char szInputKey[8] = {0};
+	char szInputPlaintext[1024] = {0};
+	char szInputCiphertext[1024] = {0};
+	char szInputCiphertextInHex[2048] = {0};
+	char szCiphertextInBit[8196] = {0};
+	int cmd = -1;
+	int temp = 0;
+
+	int	ret ;
+	/** 根据原密文生成对应的明文 **/
+	char	str[4096];
+	char	encrystr[4096];
+	memset(str,0x00,sizeof(str));
+	/** 第一次解密 **/
+	memset(szInputKey,0x00,sizeof(szInputKey));
+	memset(szInputPlaintext,0x00,sizeof(szInputPlaintext));
+	memset(szInputCiphertext,0x00,sizeof(szInputCiphertext));
+	memset(szInputCiphertextInHex,0x00,sizeof(szInputCiphertextInHex));
+	memset(szCiphertextInBit,0x00,sizeof(szCiphertextInBit));
+	memset(encrystr,0x00,sizeof(encrystr));
+	memset(szInputCiphertextInHex,0,2048);
+	memset(szCiphertextInBit,0,8196);
+	memcpy(szInputKey,key+16,8);
+	leoDES2_InitializeKey(szInputKey);
+	strcpy(szInputCiphertextInHex,encryfile);
+	temp = strlen(szInputCiphertextInHex);
+
+	leoDES2_Hex2Bits(szInputCiphertextInHex,szCiphertextInBit,temp << 2);
+	leoDES2_Bits2Bytes(szInputCiphertext,szCiphertextInBit,temp << 2);
+	leoDES2_DecryptAnyLength(szInputCiphertext,temp >> 1);
+	strcpy(encrystr,leoDES2_GetPlaintextAnyLength());
+	//printf("After decrypt:\n%s\n\n\n", encrystr);
+	//printf("%s %d 第一次解密 [%s]\n",__FILE__,__LINE__,encrystr);
+
+	/** 第二次解密 **/
+	memcpy(szInputKey,key+8,8);
+	leoDES2_InitializeKey(szInputKey);
+	memset(szInputCiphertextInHex,0,2048);
+	memset(szCiphertextInBit,0,8196);
+	strcpy(szInputPlaintext,encrystr);	
+	memset(encrystr,0x00,sizeof(encrystr));
+	temp = strlen(szInputPlaintext);
+	leoDES2_EncryptAnyLength(szInputPlaintext,temp);
+	temp = temp % 8 == 0 ? temp : ((temp >> 3 ) + 1)  << 3;
+	memcpy(szInputCiphertext,leoDES2_GetCiphertextAnyLength(),temp);
+	leoDES2_Bytes2Bits(szInputCiphertext,szCiphertextInBit,temp << 3);
+	leoDES2_Bits2Hex(szInputCiphertextInHex,szCiphertextInBit,temp << 3);
+	//szInputCiphertextInHex[temp % 8 == 0 ? temp << 1 : ((temp >> 3) + 1) << 4] = '\0';
+	szInputCiphertextInHex[temp << 1] = 0;
+	strcpy(encrystr,szInputCiphertextInHex);
+	//printf("%s %d 第二次解密 [%s]\n",__FILE__,__LINE__,encrystr);
+
+	/** 第三次解密 **/
+	memcpy(szInputKey,key,8);
+	leoDES2_InitializeKey(szInputKey);
+	memset(szInputCiphertextInHex,0,2048);
+	memset(szCiphertextInBit,0,8196);
+	strcpy(szInputCiphertextInHex,encrystr);
+	memset(encrystr,0x00,sizeof(encrystr));
+	temp = strlen(szInputCiphertextInHex);
+	leoDES2_Hex2Bits(szInputCiphertextInHex,szCiphertextInBit,temp << 2);
+	leoDES2_Bits2Bytes(szInputCiphertext,szCiphertextInBit,temp << 2);
+	leoDES2_DecryptAnyLength(szInputCiphertext,temp >> 1);
+	strcpy(encrystr,leoDES2_GetPlaintextAnyLength());
+	printf("%s %d 第三次解密 [%s]\n",__FILE__,__LINE__,encrystr);
+	encrystr[strlen(encrystr)-encrystr[strlen(encrystr)-1]]='\0';
+
+	memset(str,0x00,sizeof(str));
+	//sprintf(str,"%s %s %s %s %s",cardno,encrystr,enddate,seqno,crname);
+	strcpy(sfile,encrystr);
+	return  0;
+}
